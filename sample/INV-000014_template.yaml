@@ -1,0 +1,37 @@
+invoice:
+  number: INV-000014
+  date: '2025-03-28'
+  due_date: '2025-04-27'
+  month: 'March'
+company:
+  name: Syed Muhammad Maaz
+  address1: B-118, 5th Street
+  address2: Block 18, Gulshan-E-Iqbal
+  city: Karachi
+  state: Sind
+  zip: '75300'
+  country: Pakistan
+  email: m.maaz96@gmail.com
+  phone: '+923111135688'
+client:
+  name: Astera Software
+  address: '310 N Westlake Blvd #140'
+  city: Westlake Village
+  state: CA
+  zip: '91362'
+  country: U.S.A
+  email: accounts@astera.com
+items:
+- name: DEF - Freelance Services
+  description: IT Enabled Services
+  quantity: 1.0
+  unit: service
+  rate: 1760.0
+tax_rate: 0.0
+notes: Thanks for your business.
+terms: |
+  Payment Details: 
+  NAME: SYED MUHAMMAD MAAZ
+  Bank Name: BANK ALFALAH
+  Bank Country: PAKISTAN
+  IBAN Number: PK24ALFH0740001009144194

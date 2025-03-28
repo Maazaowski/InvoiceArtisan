@@ -1,0 +1,40 @@
+invoice:
+  number: "INV-2024-001"
+  date: "2024-03-20"
+  due_date: "2024-04-19"
+
+company:
+  name: "Your Company Name"
+  address: "123 Business Street"
+  city: "Business City"
+  state: "BS"
+  zip: "12345"
+  phone: "+1 (555) 123-4567"
+  email: "billing@yourcompany.com"
+
+client:
+  name: "Client Company Name"
+  address: "456 Client Avenue"
+  city: "Client City"
+  state: "CL"
+  zip: "67890"
+  email: "accounts@clientcompany.com"
+
+items:
+  - description: "Web Development Services"
+    quantity: 40
+    unit: "hours"
+    rate: 75.00
+    
+  - description: "UI/UX Design"
+    quantity: 20
+    unit: "hours"
+    rate: 85.00
+
+  - description: "Server Configuration"
+    quantity: 1
+    unit: "service"
+    rate: 450.00
+
+tax_rate: 0.10  # 10% tax rate
+notes: "Thank you for your business! Payment is due within 30 days." 
