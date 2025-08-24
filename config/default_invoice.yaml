@@ -1,0 +1,42 @@
+# Default Invoice Template for InvoiceArtisan
+# This file contains the default structure for new invoices
+
+invoice:
+  number: INV-20250824-001
+  date: '2025-08-24'
+  due_date: '2025-09-23'
+  month: 'August'
+
+company:
+  name: 'Syed Muhammad Maaz'
+  address1: 'B-118, 5th Street'
+  address2: 'Block 18, Gulshan-E-Iqbal'
+  city: 'Karachi'
+  state: 'Sind'
+  zip: '75300'
+  country: 'Pakistan'
+  email: 'm.maaz96@gmail.com'
+  phone: '+923111135688'
+
+client:
+  name: 'Client Company Name'
+  address: 'Client Address Line'
+  city: 'Client City'
+  state: 'Client State'
+  zip: 'Client ZIP'
+  country: 'Client Country'
+  email: 'client@example.com'
+
+items:
+  - name: 'Professional Services'
+    description: 'IT consulting and development services'
+    quantity: 1.0
+    unit: 'service'
+    rate: 100.0
+
+tax_rate: 0.0
+notes: 'Thank you for your business!'
+terms: |
+  Payment Details:
+  Payment is due within 30 days of invoice date.
+  Late payments may incur additional charges.

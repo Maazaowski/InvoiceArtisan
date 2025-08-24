@@ -1,0 +1,75 @@
+# InvoiceArtisan Application Configuration
+# Application settings and preferences
+
+app:
+  name: "InvoiceArtisan"
+  version: "2.0.0"
+  author: "Syed Muhammad Maaz"
+  description: "Professional Invoice Generator"
+
+gui:
+  theme:
+    primary_color: "#2c3e50"
+    secondary_color: "#3498db"
+    accent_color: "#e74c3c"
+    success_color: "#27ae60"
+    warning_color: "#f39c12"
+    light_color: "#ecf0f1"
+    dark_color: "#2c3e50"
+    white_color: "#ffffff"
+  
+  window:
+    default_width: 1200
+    default_height: 800
+    min_width: 1000
+    min_height: 700
+
+  tabs:
+    invoice_details: true
+    company_info: true
+    client_info: true
+    items: true
+    notes_terms: true
+    preview_generate: true
+
+invoice:
+  default:
+    tax_rate: 0.0
+    due_date_days: 30
+    number_prefix: "INV-"
+    number_format: "{prefix}{date}{suffix}"
+  
+  validation:
+    require_client_email: false
+    require_company_phone: false
+    min_item_quantity: 0.1
+    max_item_quantity: 999999
+
+pdf:
+  output:
+    default_format: "A4"
+    margins:
+      top: 20
+      bottom: 20
+      left: 20
+      right: 20
+  
+  styling:
+    font_family: "Helvetica"
+    header_font_size: 16
+    body_font_size: 10
+    line_spacing: 1.2
+
+paths:
+  default_output: "output/invoices"
+  templates: "assets/templates"
+  logos: "assets/logos"
+  icons: "assets/icons"
+  logs: "output/logs"
+  temp: "output/temp"
+
+logging:
+  level: "INFO"
+  file: "output/logs/app.log"
+  max_size: "10MB"
+  backup_count: 5

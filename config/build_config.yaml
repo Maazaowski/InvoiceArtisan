@@ -1,0 +1,104 @@
+# InvoiceArtisan Build Configuration
+# Settings for building executables and packages
+
+build:
+  target: "executable"  # executable, package, installer
+  platform: "windows"   # windows, macos, linux
+  
+pyinstaller:
+  spec_file: "build/pyinstaller/spec_files/invoice_artisan.spec"
+  output_dir: "dist"
+  work_dir: "build"
+  dist_dir: "dist"
+  
+  options:
+    one_file: false
+    one_dir: true
+    console: false
+    debug: false
+    strip: true
+    upx: true
+    optimize: 2
+    
+  icon:
+    path: "assets/logos/MaazLogo.PNG"
+    format: "PNG"
+    
+  data_files:
+    - source: "assets/logos"
+      destination: "logos"
+    - source: "assets/templates"
+      destination: "templates"
+    - source: "config"
+      destination: "config"
+      
+  hidden_imports:
+    - "tkinter"
+    - "tkinter.ttk"
+    - "tkinter.filedialog"
+    - "tkinter.messagebox"
+    - "tkinter.scrolledtext"
+    - "yaml"
+    - "reportlab"
+    - "PyPDF2"
+    - "PIL"
+    - "dateutil"
+    
+  excludes:
+    - "matplotlib"
+    - "numpy"
+    - "scipy"
+    - "pandas"
+    
+  hooks:
+    - "build/pyinstaller/hooks/custom_hook.py"
+
+executable:
+  name: "InvoiceArtisan"
+  version: "2.0.0"
+  description: "Professional Invoice Generator"
+  company: "Syed Muhammad Maaz"
+  copyright: "Copyright (c) 2025 Syed Muhammad Maaz"
+  
+  file_info:
+    product_name: "InvoiceArtisan"
+    product_version: "2.0.0"
+    file_version: "2.0.0.0"
+    file_description: "Professional Invoice Generator"
+    legal_copyright: "Copyright (c) 2025 Syed Muhammad Maaz"
+    original_filename: "InvoiceArtisan.exe"
+    
+  uac:
+    level: "as_invoker"
+    ui_access: false
+    
+  compression:
+    level: 6
+    algorithm: "zlib"
+    
+  optimization:
+    remove_docstrings: true
+    remove_asserts: true
+    remove_debug: true
+    
+dependencies:
+  python_version: "3.8+"
+  required_packages:
+    - "PyYAML>=6.0.1"
+    - "reportlab>=4.0.9"
+    - "python-dateutil>=2.8.2"
+    - "PyPDF2>=3.0.1"
+    - "Pillow>=10.0.1"
+    - "tkinter-tooltip>=2.1.0"
+    
+  build_packages:
+    - "pyinstaller>=6.3.0"
+    - "setuptools>=42.0.0"
+    - "wheel>=0.37.0"
+    
+  development_packages:
+    - "pytest>=6.0.0"
+    - "pytest-cov>=2.10.0"
+    - "black>=21.0.0"
+    - "flake8>=3.8.0"
+    - "mypy>=0.800"

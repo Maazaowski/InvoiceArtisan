@@ -1,22 +1,93 @@
 # InvoiceArtisan .gitignore
 
-# Invoice files - these contain sensitive business data
+# Generated output files - these contain sensitive business data
 output/invoices/
 output/logs/
 output/temp/
-*.pdf
-*.yaml
-*.yml
 
-# Python
+# User-generated invoice files (but allow templates)
+*.pdf
+# Don't exclude all YAML files - only user-generated ones
+# *.yaml
+# *.yml
+
+# Python bytecode and cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyInstaller build artifacts
 dist/
+build/pyinstaller/dist/
+build/pyinstaller/build/
+
+# PyInstaller spec files (keep the ones in build/pyinstaller/spec_files/)
+*.manifest
+
+# Test coverage and reports
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+cover/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Log files (but allow example logs)
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation build artifacts
+docs/_build/
+site/
+
+# Package build artifacts
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/
@@ -27,50 +98,23 @@ sdist/
 var/
 wheels/
 share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# PyInstaller
-*.manifest
-*.spec
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+# Pyre type checker
+.pyre/
 
-# Translations
-*.mo
-*.pot
+# pytype static type analyzer
+.pytype/
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
+# Cython debug symbols
+cython_debug/
 
 # Sphinx documentation
 docs/_build/
@@ -79,12 +123,38 @@ docs/_build/
 .pybuilder/
 target/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# mkdocs
+/site
 
-# IPython
-profile_default/
-ipython_config.py
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Translations
+*.mo
+*.pot
+
+# Django
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
 
 # pyenv
 .python-version
@@ -101,67 +171,15 @@ poetry.lock
 # PEP 582
 __pypackages__/
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-.idea/
-
-# VS Code
-.vscode/
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+# IPython
+profile_default/
+ipython_config.py
 
 # macOS
-.DS_Store
 .AppleDouble
 .LSOverride
 Icon
-._*
-.DocumentRevisions-V100
 .fseventsd
-.Spotlight-V100
 .TemporaryItems
 .Trashes
 .VolumeIcon.icns
@@ -173,38 +191,11 @@ Temporary Items
 .apdisk
 
 # Linux
-*~
 .fuse_hidden*
 .directory
 .Trash-*
 .nfs*
 
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-
-# Logs
-*.log
-logs/
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Backup files
-*.bak
-*.backup
-*.old
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
