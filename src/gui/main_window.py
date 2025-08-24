@@ -106,28 +106,45 @@ class InvoiceArtisanGUI:
                                   foreground=self.colors['secondary'])
         subtitle_label.pack(side=tk.LEFT, padx=(10, 0))
         
-        # File operations frame
+                # File operations frame
         file_frame = ttk.Frame(header_frame)
         file_frame.pack(side=tk.RIGHT)
         
+        # Template selector
+        template_frame = ttk.Frame(header_frame)
+        template_frame.pack(side=tk.RIGHT, padx=(20, 0))
+        
+        ttk.Label(template_frame, text="Template:", 
+                 font=('Helvetica', 9)).pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.template_var = tk.StringVar(value="modern_blue")
+        self.template_combo = ttk.Combobox(template_frame, 
+                                          textvariable=self.template_var,
+                                          width=15,
+                                          state='readonly')
+        self.template_combo.pack(side=tk.LEFT)
+        
+        # Load available templates
+        self.load_available_templates()
+        
         # New button
         self.new_btn = ttk.Button(file_frame, 
-                                 text="New Invoice", 
-                                 command=self.new_invoice,
-                                 style='Primary.TButton')
+                                  text="New Invoice", 
+                                  command=self.new_invoice,
+                                  style='Primary.TButton')
         self.new_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
         # Open button
         self.open_btn = ttk.Button(file_frame, 
-                                  text="Open YAML", 
-                                  command=self.open_yaml)
+                                   text="Open YAML", 
+                                   command=self.open_yaml)
         self.open_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
         # Save button
         self.save_btn = ttk.Button(file_frame, 
-                                  text="Save YAML", 
-                                  command=self.save_yaml,
-                                  style='Success.TButton')
+                                   text="Save YAML", 
+                                   command=self.save_yaml,
+                                   style='Success.TButton')
         self.save_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
     def create_main_content(self):
@@ -142,7 +159,11 @@ class InvoiceArtisanGUI:
         self.create_client_tab()
         self.create_items_tab()
         self.create_notes_tab()
+        self.create_template_tab()
         self.create_preview_tab()
+        
+        # Initialize template preview after all tabs are created
+        self.update_template_preview()
         
     def create_invoice_tab(self):
         """Create the invoice details tab"""
@@ -443,6 +464,60 @@ class InvoiceArtisanGUI:
         ttk.Button(templates_frame, text="Clear All", 
                   command=self.clear_notes_terms).pack(side=tk.LEFT)
         
+    def create_template_tab(self):
+        """Create the template selection and preview tab"""
+        template_frame = ttk.Frame(self.notebook)
+        self.notebook.add(template_frame, text="Template")
+        
+        content_frame = ttk.Frame(template_frame)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        
+        # Template selection section
+        selection_frame = ttk.LabelFrame(content_frame, text="Select Template", padding=10)
+        selection_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        # Template dropdown
+        ttk.Label(selection_frame, text="Invoice Template:", 
+                 style='Section.TLabel').pack(anchor=tk.W, pady=(0, 5))
+        
+        self.template_preview_combo = ttk.Combobox(selection_frame, 
+                                                   textvariable=self.template_var,
+                                                   width=40,
+                                                   state='readonly')
+        self.template_preview_combo.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Template description
+        self.template_description = ttk.Label(selection_frame, text="", 
+                                            wraplength=500,
+                                            justify=tk.LEFT)
+        self.template_description.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Template features
+        self.template_features = ttk.Label(selection_frame, text="", 
+                                         wraplength=500,
+                                         justify=tk.LEFT)
+        self.template_features.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Preview section
+        preview_frame = ttk.LabelFrame(content_frame, text="Template Preview", padding=10)
+        preview_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Preview text area
+        self.template_preview_text = scrolledtext.ScrolledText(preview_frame, height=20, width=80)
+        self.template_preview_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        
+        # Preview buttons
+        preview_buttons_frame = ttk.Frame(preview_frame)
+        preview_buttons_frame.pack(fill=tk.X)
+        
+        ttk.Button(preview_buttons_frame, text="Update Preview", 
+                   command=self.update_template_preview).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(preview_buttons_frame, text="Generate Sample PDF", 
+                   command=self.generate_template_sample).pack(side=tk.LEFT)
+        
+        # Update template preview when template changes
+        self.template_preview_combo.bind('<<ComboboxSelected>>', self.update_template_preview)
+        
     def create_preview_tab(self):
         """Create the preview and generate tab"""
         preview_frame = ttk.Frame(self.notebook)
@@ -630,10 +705,134 @@ class InvoiceArtisanGUI:
         self.invoice_data['notes'] = self.notes_text.get(1.0, tk.END).strip()
         self.invoice_data['terms'] = self.terms_text.get(1.0, tk.END).strip()
         
+    def load_available_templates(self):
+        """Load available invoice templates"""
+        try:
+            from utils.template_manager import get_template_manager
+            template_manager = get_template_manager()
+            templates = template_manager.get_available_templates()
+            
+            # Populate template combo box
+            template_names = [f"{t['name']} ({t['id']})" for t in templates.values()]
+            template_ids = list(templates.keys())
+            
+            self.template_combo['values'] = template_names
+            self.template_combo.set(template_names[0])  # Set first template as default
+            
+            # Store template mapping
+            self.template_mapping = dict(zip(template_names, template_ids))
+            
+        except ImportError:
+            # Fallback if template manager is not available
+            self.template_combo['values'] = ['Modern Blue (modern_blue)']
+            self.template_combo.set('Modern Blue (modern_blue)')
+            self.template_mapping = {'Modern Blue (modern_blue)': 'modern_blue'}
+    
+    def get_selected_template(self):
+        """Get the currently selected template ID"""
+        selected = self.template_var.get()
+        return self.template_mapping.get(selected, 'modern_blue')
+    
     def bind_events(self):
         """Bind UI events"""
         # Auto-save on tab change
         self.notebook.bind('<<NotebookTabChanged>>', self.on_tab_changed)
+        
+        # Template change event
+        self.template_combo.bind('<<ComboboxSelected>>', self.on_template_changed)
+        
+    def on_template_changed(self, event):
+        """Handle template change events"""
+        selected_template = self.get_selected_template()
+        print(f"Template changed to: {selected_template}")
+        # Update template preview
+        self.update_template_preview()
+    
+    def update_template_preview(self):
+        """Update the template preview with current selection"""
+        try:
+            from utils.template_manager import get_template_manager
+            template_manager = get_template_manager()
+            
+            selected_template = self.get_selected_template()
+            template = template_manager.get_template(selected_template)
+            
+            if template:
+                # Update description
+                description = template.get('description', 'No description available')
+                self.template_description.config(text=description)
+                
+                # Update features
+                features = template.get('features', [])
+                features_text = "Features: " + ", ".join(features) if features else "No features listed"
+                self.template_features.config(text=features_text)
+                
+                # Update preview text
+                preview_text = f"""TEMPLATE PREVIEW: {template.get('name', selected_template)}
+{'='*50}
+
+COLORS:
+Primary: {template.get('colors', {}).get('primary', 'N/A')}
+Secondary: {template.get('colors', {}).get('secondary', 'N/A')}
+Background: {template.get('colors', {}).get('background', 'N/A')}
+Text: {template.get('colors', {}).get('text', 'N/A')}
+Accent: {template.get('colors', {}).get('accent', 'N/A')}
+
+FONTS:
+Header: {template.get('fonts', {}).get('header', 'N/A')}
+Body: {template.get('fonts', {}).get('body', 'N/A')}
+Accent: {template.get('fonts', {}).get('accent', 'N/A')}
+
+SPACING:
+Header Margin: {template.get('spacing', {}).get('header_margin', 'N/A')}px
+Section Margin: {template.get('spacing', {}).get('section_margin', 'N/A')}px
+Item Padding: {template.get('spacing', {}).get('item_padding', 'N/A')}px
+
+FEATURES:
+{chr(10).join(f"• {feature}" for feature in template.get('features', []))}
+"""
+                
+                self.template_preview_text.delete(1.0, tk.END)
+                self.template_preview_text.insert(1.0, preview_text)
+                
+        except ImportError:
+            self.template_description.config(text="Template manager not available")
+            self.template_features.config(text="")
+            self.template_preview_text.delete(1.0, tk.END)
+            self.template_preview_text.insert(1.0, "Template preview not available")
+    
+    def generate_template_sample(self):
+        """Generate a sample PDF using the current template"""
+        try:
+            from utils.template_manager import get_template_manager
+            from core.invoice_generator import generate_invoice
+            
+            template_manager = get_template_manager()
+            selected_template = self.get_selected_template()
+            
+            # Get sample data
+            sample_data = template_manager.get_template_preview_data()
+            
+            # Generate sample PDF
+            output_path = f"output/invoices/sample_{selected_template}.pdf"
+            
+            # Ensure output directory exists
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            # Generate PDF with selected template
+            pdf_path = generate_invoice(sample_data, output_path, selected_template)
+            
+            if pdf_path and os.path.exists(pdf_path):
+                messagebox.showinfo("Success", f"Sample PDF generated successfully!\n\nFile: {pdf_path}")
+                
+                # Open the generated PDF
+                if messagebox.askyesno("Open PDF", "Would you like to open the generated sample PDF?"):
+                    os.startfile(pdf_path) if os.name == 'nt' else subprocess.run(['xdg-open', pdf_path])
+            else:
+                messagebox.showerror("Error", "Failed to generate sample PDF")
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate sample PDF: {str(e)}")
         
     def on_tab_changed(self, event):
         """Handle tab change events"""
@@ -729,8 +928,11 @@ class InvoiceArtisanGUI:
             with open(self.current_file, 'r') as file:
                 invoice_data = yaml.safe_load(file)
             
-            # Generate PDF using the imported function
-            pdf_path = generate_invoice(invoice_data, output_pdf)
+            # Get selected template
+            selected_template = self.get_selected_template()
+            
+            # Generate PDF using the imported function with selected template
+            pdf_path = generate_invoice(invoice_data, output_pdf, selected_template)
             
             if pdf_path and os.path.exists(pdf_path):
                 messagebox.showinfo("Success", f"PDF invoice generated successfully!\n\nFile: {pdf_path}")

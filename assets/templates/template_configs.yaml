@@ -1,0 +1,153 @@
+# Invoice Template Configurations
+# This file defines all available invoice templates with their styling properties
+
+templates:
+  modern_blue:
+    name: "Modern Blue"
+    description: "Professional blue theme with clean lines and modern typography"
+    colors:
+      primary: "#2c3e50"      # Dark blue for headers
+      secondary: "#3498db"    # Accent blue
+      background: "#f5f9fc"   # Light blue background
+      text: "#2c3e50"        # Dark text
+      accent: "#e74c3c"      # Red accent
+      light_gray: "#f8f9fa"  # Light gray for alternating rows
+      medium_gray: "#e9ecef" # Medium gray for borders
+    fonts:
+      header: "Helvetica-Bold"
+      body: "Helvetica"
+      accent: "Helvetica-Bold"
+    spacing:
+      header_margin: 15
+      section_margin: 15
+      item_padding: 6
+    features:
+      - alternating_row_colors
+      - rounded_corners
+      - subtle_shadows
+      - modern_typography
+
+  classic_black:
+    name: "Classic Black"
+    description: "Traditional black and white theme with elegant typography"
+    colors:
+      primary: "#000000"      # Pure black
+      secondary: "#333333"    # Dark gray
+      background: "#ffffff"   # White background
+      text: "#000000"        # Black text
+      accent: "#666666"      # Medium gray accent
+      light_gray: "#f5f5f5"  # Very light gray
+      medium_gray: "#cccccc" # Light gray for borders
+    fonts:
+      header: "Times-Bold"
+      body: "Times-Roman"
+      accent: "Times-Bold"
+    spacing:
+      header_margin: 20
+      section_margin: 20
+      item_padding: 8
+    features:
+      - traditional_layout
+      - serif_typography
+      - formal_appearance
+      - clean_lines
+
+  corporate_green:
+    name: "Corporate Green"
+    description: "Business green theme with professional appearance"
+    colors:
+      primary: "#2e7d32"      # Dark green
+      secondary: "#4caf50"    # Medium green
+      background: "#f1f8e9"   # Light green background
+      text: "#1b5e20"        # Dark green text
+      accent: "#ff9800"      # Orange accent
+      light_gray: "#e8f5e8"  # Very light green
+      medium_gray: "#c8e6c9" # Light green borders
+    fonts:
+      header: "Arial-Bold"
+      body: "Arial"
+      accent: "Arial-Bold"
+    spacing:
+      header_margin: 18
+      section_margin: 18
+      item_padding: 7
+    features:
+      - professional_green_theme
+      - business_focused
+      - balanced_spacing
+      - corporate_identity
+
+  elegant_purple:
+    name: "Elegant Purple"
+    description: "Sophisticated purple theme with luxury feel"
+    colors:
+      primary: "#6a1b9a"      # Dark purple
+      secondary: "#9c27b0"    # Medium purple
+      background: "#f8f5ff"   # Light purple background
+      text: "#4a148c"        # Dark purple text
+      accent: "#ffd700"      # Gold accent
+      light_gray: "#f3e5f5"  # Very light purple
+      medium_gray: "#e1bee7" # Light purple borders
+    fonts:
+      header: "Georgia-Bold"
+      body: "Georgia"
+      accent: "Georgia-Bold"
+    spacing:
+      header_margin: 22
+      section_margin: 22
+      item_padding: 9
+    features:
+      - luxury_appearance
+      - sophisticated_colors
+      - premium_typography
+      - elegant_spacing
+
+  minimal_gray:
+    name: "Minimal Gray"
+    description: "Clean minimal theme with subtle gray tones"
+    colors:
+      primary: "#424242"      # Dark gray
+      secondary: "#757575"    # Medium gray
+      background: "#fafafa"   # Off-white background
+      text: "#212121"        # Very dark gray text
+      accent: "#ff5722"      # Orange accent
+      light_gray: "#eeeeee"  # Light gray
+      medium_gray: "#bdbdbd" # Medium gray borders
+    fonts:
+      header: "Roboto-Bold"
+      body: "Roboto"
+      accent: "Roboto-Bold"
+    spacing:
+      header_margin: 16
+      section_margin: 16
+      item_padding: 6
+    features:
+      - minimal_design
+      - clean_typography
+      - subtle_colors
+      - modern_minimalism
+
+  warm_orange:
+    name: "Warm Orange"
+    description: "Friendly orange theme with warm, approachable feel"
+    colors:
+      primary: "#e65100"      # Dark orange
+      secondary: "#ff9800"    # Medium orange
+      background: "#fff3e0"   # Light orange background
+      text: "#bf360c"        # Dark orange text
+      accent: "#2196f3"      # Blue accent
+      light_gray: "#ffe0b2"  # Very light orange
+      medium_gray: "#ffcc80" # Light orange borders
+    fonts:
+      header: "Verdana-Bold"
+      body: "Verdana"
+      accent: "Verdana-Bold"
+    spacing:
+      header_margin: 17
+      section_margin: 17
+      item_padding: 7
+    features:
+      - warm_colors
+      - friendly_appearance
+      - approachable_design
+      - balanced_layout

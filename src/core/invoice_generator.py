@@ -49,9 +49,19 @@ def calculate_totals(items):
 def format_currency(amount):
     return f"${amount:,.2f}"
 
-def generate_invoice(data, output_pdf):
-    """Generate a PDF invoice from the provided data."""
+def generate_invoice(data, output_pdf, template_id="modern_blue"):
+    """Generate a PDF invoice from the provided data using the specified template."""
     try:
+        # Import template manager
+        try:
+            from ..utils.template_manager import get_template_manager
+            template_manager = get_template_manager()
+            template = template_manager.get_template(template_id)
+        except ImportError:
+            # Fallback to default template if import fails
+            template = None
+            print("Warning: Template manager not available, using default styling")
+        
         # Validate input data
         if not isinstance(data, dict):
             print(f"Error: Expected dict, got {type(data)}")
@@ -107,7 +117,35 @@ def generate_invoice(data, output_pdf):
                 return None
         
         print(f"Data validation passed. Invoice: {data['invoice']['number']}")
-        # Create document with slightly larger margins for a more balanced look
+        
+        # Apply template styling
+        if template:
+            template_colors = template.get('colors', {})
+            template_fonts = template.get('fonts', {})
+            template_spacing = template.get('spacing', {})
+        else:
+            # Fallback to default colors
+            template_colors = {
+                'primary': '#2c3e50',
+                'secondary': '#3498db',
+                'background': '#f5f9fc',
+                'text': '#2c3e50',
+                'accent': '#e74c3c',
+                'light_gray': '#f8f9fa',
+                'medium_gray': '#e9ecef'
+            }
+            template_fonts = {
+                'header': 'Helvetica-Bold',
+                'body': 'Helvetica',
+                'accent': 'Helvetica-Bold'
+            }
+            template_spacing = {
+                'header_margin': 15,
+                'section_margin': 15,
+                'item_padding': 6
+            }
+        
+        # Create document with template-based margins
         doc = SimpleDocTemplate(
             output_pdf,
             pagesize=letter,
@@ -120,11 +158,11 @@ def generate_invoice(data, output_pdf):
         styles = getSampleStyleSheet()
         elements = []
         
-        # Enhanced styling for the entire document
+        # Enhanced styling for the entire document using template
         doc_style = ParagraphStyle(
             'DocStyle',
             parent=styles['Normal'],
-            fontName='Helvetica',
+            fontName=template_fonts.get('body', 'Helvetica'),
             fontSize=10,
             leading=12,
             spaceBefore=4,
@@ -154,18 +192,18 @@ def generate_invoice(data, output_pdf):
                 'LogoPlaceholder',
                 parent=styles['Normal'],
                 fontSize=24,
-                fontName='Helvetica-Bold',
-                textColor=colors.gray,
+                fontName=template_fonts.get('header', 'Helvetica-Bold'),
+                textColor=colors.HexColor(template_colors.get('text', '#666666')),
                 alignment=TA_CENTER
             ))
         
-        # Enhanced invoice title style
+        # Enhanced invoice title style using template
         invoice_title_style = ParagraphStyle(
             'InvoiceTitle',
             parent=styles['Heading1'],
-            fontName='Helvetica-Bold',
+            fontName=template_fonts.get('header', 'Helvetica-Bold'),
             fontSize=28,
-            textColor=DARK_BLUE,
+            textColor=colors.HexColor(template_colors.get('primary', '#2c3e50')),
             alignment=TA_RIGHT
         )
         
@@ -173,15 +211,15 @@ def generate_invoice(data, output_pdf):
             'InvoiceNumber',
             parent=styles['Normal'],
             fontSize=11,
-            fontName='Helvetica',
-            textColor=DARK_BLUE,
+            fontName=template_fonts.get('body', 'Helvetica'),
+            textColor=colors.HexColor(template_colors.get('secondary', '#3498db')),
             alignment=TA_RIGHT
         )
         
         # Use a 3-column layout with middle column as spacer
         # Combine invoice title and number in the same cell with no spacing
         header_table = Table([
-            [logo, "", Paragraph(f"""<font color="#2c3e50">INVOICE</font><br/><font size="10" color="#3498db"># {data['invoice']['number']}</font>""", invoice_title_style)]
+            [logo, "", Paragraph(f"""<font color="{template_colors.get('primary', '#2c3e50')}">INVOICE</font><br/><font size="10" color="{template_colors.get('secondary', '#3498db')}"># {data['invoice']['number']}</font>""", invoice_title_style)]
         ], colWidths=[2*inch, 4*inch, 2*inch])
         
         header_table.setStyle(TableStyle([
@@ -190,14 +228,15 @@ def generate_invoice(data, output_pdf):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         
-        # Reduce spacing after header
+        # Reduce spacing after header using template spacing
         elements.append(header_table)
-        elements.append(Spacer(1, 15))
+        elements.append(Spacer(1, template_spacing.get('header_margin', 15)))
         
-        # Add subtle separator
-        elements.append(HRFlowable(width=7.8*inch, thickness=1, color=MEDIUM_GRAY, space_before=0, space_after=10))
+        # Add subtle separator using template colors
+        separator_color = colors.HexColor(template_colors.get('medium_gray', '#e9ecef'))
+        elements.append(HRFlowable(width=7.8*inch, thickness=1, color=separator_color, space_before=0, space_after=10))
         
-        # Enhanced company info style
+        # Enhanced company info style using template
         company_style = ParagraphStyle(
             'CompanyStyle',
             parent=doc_style,
@@ -209,7 +248,7 @@ def generate_invoice(data, output_pdf):
         
         # Company Info with enhanced styling but ensure it's left-aligned
         company_info = f"""
-        <font size="12" color="#2c3e50"><b>{data['company']['name']}</b></font><br/>
+        <font size="12" color="{template_colors.get('primary', '#2c3e50')}"><b>{data['company']['name']}</b></font><br/>
         {data['company'].get('address1', '')}<br/>
         {data['company'].get('address2', '')}<br/>
         {data['company']['city']}, {data['company']['state']} {data['company']['zip']}<br/>
@@ -218,15 +257,15 @@ def generate_invoice(data, output_pdf):
         {data['company']['email']}
         """
         elements.append(Paragraph(company_info, company_style))
-        elements.append(Spacer(1, 15))
+        elements.append(Spacer(1, template_spacing.get('section_margin', 15)))
         
-        # Enhanced Bill To and Invoice Details styles
+        # Enhanced Bill To and Invoice Details styles using template
         bill_to_title_style = ParagraphStyle(
             'BillToTitle',
             parent=doc_style,
             fontSize=11,
-            fontName='Helvetica-Bold',
-            textColor=DARK_BLUE
+            fontName=template_fonts.get('header', 'Helvetica-Bold'),
+            textColor=colors.HexColor(template_colors.get('primary', '#2c3e50'))
         )
         
         bill_to_info_style = ParagraphStyle(
@@ -253,7 +292,7 @@ def generate_invoice(data, output_pdf):
                 return date_str  # Return original if parsing fails
         
         # Create BILL TO and Invoice Details side by side in a table
-        bill_to_title = Paragraph("<font color='#2c3e50'><b>BILL TO:</b></font>", bill_to_title_style)
+        bill_to_title = Paragraph(f"<font color='{template_colors.get('primary', '#2c3e50')}'><b>BILL TO:</b></font>", bill_to_title_style)
         bill_to_info = Paragraph(f"""
         {data['client']['name']}<br/>
         {data['client']['address']}<br/>
@@ -262,9 +301,9 @@ def generate_invoice(data, output_pdf):
         """, bill_to_info_style)
         
         invoice_details = Paragraph(f"""
-        <font color='#3498db'><b>Month:</b></font> {data['invoice'].get('month', '')}<br/>
-        <font color='#3498db'><b>Date:</b></font> {format_date(data['invoice']['date'])}<br/>
-        <font color='#3498db'><b>Due Date:</b></font> {format_date(data['invoice']['due_date'])}
+        <font color='{template_colors.get('secondary', '#3498db')}'><b>Month:</b></font> {data['invoice'].get('month', '')}<br/>
+        <font color='{template_colors.get('secondary', '#3498db')}'><b>Date:</b></font> {format_date(data['invoice']['date'])}<br/>
+        <font color='{template_colors.get('secondary', '#3498db')}'><b>Due Date:</b></font> {format_date(data['invoice']['due_date'])}
         """, right_style)
         
         # Create a table with two rows - title row and content row
@@ -283,14 +322,14 @@ def generate_invoice(data, output_pdf):
         ]))
         
         elements.append(client_invoice_table)
-        elements.append(Spacer(1, 15))
+        elements.append(Spacer(1, template_spacing.get('section_margin', 15)))
         
-        # Items Table Header Style
+        # Items Table Header Style using template
         table_header_style = ParagraphStyle(
             'TableHeader',
             parent=doc_style,
             fontSize=10,
-            fontName='Helvetica-Bold',
+            fontName=template_fonts.get('header', 'Helvetica-Bold'),
             textColor=colors.white
         )
         
@@ -325,7 +364,7 @@ def generate_invoice(data, output_pdf):
                 
             # Format the combined item and description cell
             if description_text:
-                item_cell = f"<b>{item_text}</b><br/><font color='#7f8c8d' size='9'>{description_text}</font>"
+                item_cell = f"<b>{item_text}</b><br/><font color='{template_colors.get('accent', '#7f8c8d')}' size='9'>{description_text}</font>"
             else:
                 item_cell = f"<b>{item_text}</b>"
                 
@@ -346,7 +385,7 @@ def generate_invoice(data, output_pdf):
         # Add a blank row before totals for better spacing
         table_data.append(['', '', '', '', ''])
         
-        # Create right-aligned style for totals
+        # Create right-aligned style for totals using template
         total_label_style = ParagraphStyle(
             'TotalLabelStyle',
             parent=doc_style,
@@ -358,40 +397,45 @@ def generate_invoice(data, output_pdf):
             'TotalStyle',
             parent=doc_style,
             alignment=TA_RIGHT,
-            fontName='Helvetica-Bold',
+            fontName=template_fonts.get('accent', 'Helvetica-Bold'),
             fontSize=11,
-            textColor=DARK_BLUE
+            textColor=colors.HexColor(template_colors.get('primary', '#2c3e50'))
         )
         
         grand_total_style = ParagraphStyle(
             'GrandTotalStyle',
             parent=doc_style,
             alignment=TA_RIGHT,
-            fontName='Helvetica-Bold',
+            fontName=template_fonts.get('accent', 'Helvetica-Bold'),
             fontSize=12,
-            textColor=DARK_BLUE
+            textColor=colors.HexColor(template_colors.get('primary', '#2c3e50'))
         )
         
         # Add totals to table with improved styling
         table_data.extend([
             ['', '', '', Paragraph("Subtotal:", total_label_style), format_currency(subtotal)],
             ['', '', '', Paragraph(f"Tax ({data['tax_rate']*100}%):", total_label_style), format_currency(tax)],
-            ['', '', '', Paragraph("<font color='#2c3e50'><b>Total:</b></font>", total_style), Paragraph(f"<font color='#2c3e50'><b>{format_currency(total)}</b></font>", grand_total_style)]
+            ['', '', '', Paragraph(f"<font color='{template_colors.get('primary', '#2c3e50')}'><b>Total:</b></font>", total_style), Paragraph(f"<font color='{template_colors.get('primary', '#2c3e50')}'><b>{format_currency(total)}</b></font>", grand_total_style)]
         ])
         
         # More balanced column widths
         table = Table(table_data, colWidths=[0.5*inch, 4*inch, 0.75*inch, 1.25*inch, 1*inch])
         
-        # Improved table styling with alternating row colors and better borders
+        # Improved table styling with alternating row colors and better borders using template
+        primary_color = colors.HexColor(template_colors.get('primary', '#2c3e50'))
+        light_gray_color = colors.HexColor(template_colors.get('light_gray', '#f8f9fa'))
+        medium_gray_color = colors.HexColor(template_colors.get('medium_gray', '#e9ecef'))
+        
         row_styles = []
         for i in range(len(table_data)):
             if i == 0:  # Header row
-                row_styles.append(('BACKGROUND', (0, i), (-1, i), DARK_BLUE))
+                row_styles.append(('BACKGROUND', (0, i), (-1, i), primary_color))
                 row_styles.append(('TEXTCOLOR', (0, i), (-1, i), colors.white))
             elif i % 2 == 1 and i < len(table_data) - 4:  # Alternating rows, excluding total rows
-                row_styles.append(('BACKGROUND', (0, i), (-1, i), LIGHT_GRAY))
+                row_styles.append(('BACKGROUND', (0, i), (-1, i), light_gray_color))
         
-        # Make table rows more compact
+        # Make table rows more compact using template spacing
+        item_padding = template_spacing.get('item_padding', 6)
         table.setStyle(TableStyle([
             # Alignment
             ('ALIGN', (0, 0), (0, -1), 'CENTER'),  # Center the No. column
@@ -401,36 +445,36 @@ def generate_invoice(data, output_pdf):
             ('ALIGN', (4, 0), (4, -1), 'RIGHT'),   # Right align amount column
             
             # Header row styling - reduced padding
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, 0), template_fonts.get('header', 'Helvetica-Bold')),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
             ('TOPPADDING', (0, 0), (-1, 0), 8),
             
-            # Item rows styling - reduced padding
-            ('TOPPADDING', (0, 1), (-1, -5), 6),
-            ('BOTTOMPADDING', (0, 1), (-1, -5), 6),
+            # Item rows styling - reduced padding using template
+            ('TOPPADDING', (0, 1), (-1, -5), item_padding),
+            ('BOTTOMPADDING', (0, 1), (-1, -5), item_padding),
             
             # Grid styling - lighter grid for better appearance
-            ('GRID', (0, 0), (-1, -5), 0.5, MEDIUM_GRAY),
+            ('GRID', (0, 0), (-1, -5), 0.5, medium_gray_color),
             
             # Totals section styling - reduced padding
-            ('TOPPADDING', (0, -3), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, -3), (-1, -1), 6),
-            ('LINEABOVE', (3, -3), (-1, -3), 1, DARK_BLUE),
-            ('LINEBELOW', (3, -1), (-1, -1), 1.5, DARK_BLUE),
+            ('TOPPADDING', (0, -3), (-1, -1), item_padding),
+            ('BOTTOMPADDING', (0, -3), (-1, -1), item_padding),
+            ('LINEABOVE', (3, -3), (-1, -3), 1, primary_color),
+            ('LINEBELOW', (3, -1), (-1, -1), 1.5, primary_color),
         ] + row_styles))
         
         elements.append(table)
         
         # Notes with improved styling but less spacing - only show if it contains more than a thank you message
         if data.get('notes') and not any(thank_phrase in data['notes'].lower() for thank_phrase in ['thank', 'thanks', 'thank you', 'business']):
-            elements.append(Spacer(1, 15))
+            elements.append(Spacer(1, template_spacing.get('section_margin', 15)))
             
             notes_title_style = ParagraphStyle(
                 'NotesTitle',
                 parent=doc_style,
                 fontSize=10,
-                fontName='Helvetica-Bold',
-                textColor=DARK_BLUE,
+                fontName=template_fonts.get('header', 'Helvetica-Bold'),
+                textColor=colors.HexColor(template_colors.get('primary', '#2c3e50')),
                 spaceAfter=5
             )
             
@@ -443,19 +487,19 @@ def generate_invoice(data, output_pdf):
                 leading=11
             )
             
-            elements.append(Paragraph("<font color='#2c3e50'><b>Notes:</b></font>", notes_title_style))
+            elements.append(Paragraph(f"<font color='{template_colors.get('primary', '#2c3e50')}'><b>Notes:</b></font>", notes_title_style))
             elements.append(Paragraph(data['notes'], notes_style))
         
         # Terms and Conditions with improved styling but more compact
         if data.get('terms'):
-            elements.append(Spacer(1, 15))
+            elements.append(Spacer(1, template_spacing.get('section_margin', 15)))
             
             terms_title_style = ParagraphStyle(
                 'TermsTitle',
                 parent=doc_style,
                 fontSize=10,
-                fontName='Helvetica-Bold',
-                textColor=DARK_BLUE
+                fontName=template_fonts.get('header', 'Helvetica-Bold'),
+                textColor=colors.HexColor(template_colors.get('primary', '#2c3e50'))
             )
             
             terms_style = ParagraphStyle(
@@ -468,14 +512,14 @@ def generate_invoice(data, output_pdf):
             )
             
             # More compact spacing between terms sections
-            elements.append(Paragraph("<font color='#2c3e50'><b>Terms & Conditions:</b></font>", terms_title_style))
+            elements.append(Paragraph(f"<font color='{template_colors.get('primary', '#2c3e50')}'><b>Terms & Conditions:</b></font>", terms_title_style))
             
             # Split terms into payment details and other terms
             terms_parts = data['terms'].split("Payment Details:", 1)
             if len(terms_parts) > 1:
                 # Add payment details section with less spacing
                 elements.append(Spacer(1, 2))
-                elements.append(Paragraph("<font color='#3498db'><b>Payment Details:</b></font>", terms_style))
+                elements.append(Paragraph(f"<font color='{template_colors.get('secondary', '#3498db')}'><b>Payment Details:</b></font>", terms_style))
                 
                 # Process each line of payment details
                 payment_lines = terms_parts[1].strip().split('\n')
@@ -495,15 +539,15 @@ def generate_invoice(data, output_pdf):
                 elements.append(Paragraph(terms_parts[0].strip(), terms_style))
         
         # Add a footer with less space before
-        elements.append(Spacer(1, 15))
-        elements.append(HRFlowable(width=7.8*inch, thickness=1, color=MEDIUM_GRAY, space_before=2, space_after=5))
+        elements.append(Spacer(1, template_spacing.get('section_margin', 15)))
+        elements.append(HRFlowable(width=7.8*inch, thickness=1, color=separator_color, space_before=2, space_after=5))
         
         footer_style = ParagraphStyle(
             'Footer',
             parent=doc_style,
             alignment=TA_CENTER,
             fontSize=9,
-            textColor=colors.gray
+            textColor=colors.HexColor(template_colors.get('text', '#666666'))
         )
         
         elements.append(Paragraph("Thank you for your business!", footer_style))
