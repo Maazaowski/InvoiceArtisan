@@ -77,7 +77,7 @@ def verify_build():
         print(f"📏 Size: {size_mb:.1f} MB")
         
         # Check if required files are included
-        required_files = ['logo', 'sample', 'invoice_generator.py']
+        required_files = ['logo', 'sample', 'src/core/invoice_generator.py']
         for file in required_files:
             if (dist_dir / file).exists():
                 print(f"✅ {file} included")

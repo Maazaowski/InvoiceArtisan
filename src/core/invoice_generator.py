@@ -52,6 +52,61 @@ def format_currency(amount):
 def generate_invoice(data, output_pdf):
     """Generate a PDF invoice from the provided data."""
     try:
+        # Validate input data
+        if not isinstance(data, dict):
+            print(f"Error: Expected dict, got {type(data)}")
+            return None
+            
+        # Check required fields
+        required_fields = ['invoice', 'company', 'client', 'items']
+        for field in required_fields:
+            if field not in data:
+                print(f"Error: Missing required field '{field}'")
+                return None
+        
+        # Check that invoice, company, and client are dictionaries
+        dict_fields = ['invoice', 'company', 'client']
+        for field in dict_fields:
+            if not isinstance(data[field], dict):
+                print(f"Error: Field '{field}' should be a dict, got {type(data[field])}")
+                return None
+        
+        # Check invoice subfields
+        invoice_fields = ['number', 'date', 'due_date']
+        for field in invoice_fields:
+            if field not in data['invoice']:
+                print(f"Error: Missing invoice field '{field}'")
+                return None
+        
+        # Check company subfields
+        company_fields = ['name', 'city', 'state', 'zip', 'country', 'email', 'phone']
+        for field in company_fields:
+            if field not in data['company']:
+                print(f"Error: Missing company field '{field}'")
+                return None
+        
+        # Check client subfields
+        client_fields = ['name', 'address', 'city', 'state', 'zip', 'country']
+        for field in client_fields:
+            if field not in data['client']:
+                print(f"Error: Missing client field '{field}'")
+                return None
+        
+        # Check items
+        if not isinstance(data['items'], list) or len(data['items']) == 0:
+            print("Error: Items should be a non-empty list")
+            return None
+            
+        # Check that each item in the list is a dictionary with required fields
+        for i, item in enumerate(data['items']):
+            if not isinstance(item, dict):
+                print(f"Error: Item {i+1} should be a dict, got {type(item)}")
+                return None
+            if 'quantity' not in item or 'rate' not in item:
+                print(f"Error: Item {i+1} missing required fields 'quantity' or 'rate'")
+                return None
+        
+        print(f"Data validation passed. Invoice: {data['invoice']['number']}")
         # Create document with slightly larger margins for a more balanced look
         doc = SimpleDocTemplate(
             output_pdf,
@@ -77,7 +132,32 @@ def generate_invoice(data, output_pdf):
         )
         
         # Create a table for the header with logo and invoice title
-        logo = Image('logo/MaazLogo.png', width=2*inch, height=1.4*inch)
+        # Try to find the logo in different possible locations
+        logo_paths = [
+            'assets/logos/MaazLogo.PNG',  # New structure
+            'logo/MaazLogo.PNG',          # Old structure
+            'MaazLogo.PNG'                # Root directory
+        ]
+        
+        logo = None
+        for logo_path in logo_paths:
+            try:
+                logo = Image(logo_path, width=2*inch, height=1.4*inch)
+                break
+            except:
+                continue
+        
+        # If no logo found, create a placeholder
+        if logo is None:
+            # Create a simple text placeholder for the logo
+            logo = Paragraph("LOGO", ParagraphStyle(
+                'LogoPlaceholder',
+                parent=styles['Normal'],
+                fontSize=24,
+                fontName='Helvetica-Bold',
+                textColor=colors.gray,
+                alignment=TA_CENTER
+            ))
         
         # Enhanced invoice title style
         invoice_title_style = ParagraphStyle(
@@ -430,12 +510,13 @@ def generate_invoice(data, output_pdf):
         
         doc.build(elements)
         print(f"Successfully generated invoice: {output_pdf}")
+        return output_pdf
         
     except Exception as e:
         print(f"Error generating invoice: {str(e)}")
         import traceback
         traceback.print_exc()
-        sys.exit(1)
+        return None
 
 def main():
     if len(sys.argv) != 2:

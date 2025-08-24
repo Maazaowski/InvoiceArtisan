@@ -12,6 +12,12 @@ import threading
 from PIL import Image, ImageTk
 import json
 
+# Add the src directory to the Python path for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_dir)
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
+
 class InvoiceArtisanGUI:
     def __init__(self, root):
         self.root = root
@@ -644,8 +650,8 @@ class InvoiceArtisanGUI:
             
     def open_yaml(self):
         """Open a YAML file"""
-        # Set default directory to invoices folder
-        initial_dir = os.path.join(os.getcwd(), 'invoices')
+        # Set default directory to output/invoices folder
+        initial_dir = os.path.join(os.getcwd(), 'output', 'invoices')
         if not os.path.exists(initial_dir):
             initial_dir = os.getcwd()
             
@@ -670,8 +676,8 @@ class InvoiceArtisanGUI:
         self.collect_data_from_ui()
         
         if not self.current_file:
-            # Set default directory to invoices folder
-            initial_dir = os.path.join(os.getcwd(), 'invoices')
+            # Set default directory to output/invoices folder
+            initial_dir = os.path.join(os.getcwd(), 'output', 'invoices')
             if not os.path.exists(initial_dir):
                 initial_dir = os.getcwd()
                 
@@ -704,33 +710,40 @@ class InvoiceArtisanGUI:
         # Save current data
         self.save_yaml()
         
-        # Generate PDF using the existing invoice_generator.py
+        # Generate PDF using the core invoice generator
         try:
+            # Import the generate_invoice function
+            from core.invoice_generator import generate_invoice
+            
             # Generate PDF in the same directory as the YAML file
             output_pdf = self.current_file.rsplit('.', 1)[0] + '.pdf'
             
-            # If the YAML is in the invoices folder, ensure PDF goes there too
-            if 'invoices' in self.current_file:
+            # If the YAML is in the output/invoices folder, ensure PDF goes there too
+            if 'output/invoices' in self.current_file:
                 # Ensure the output directory exists
                 output_dir = os.path.dirname(output_pdf)
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
             
-            # Run invoice_generator.py as a subprocess
-            result = subprocess.run([
-                sys.executable, 'invoice_generator.py', self.current_file
-            ], capture_output=True, text=True, cwd=os.getcwd())
+            # Load the YAML data first
+            with open(self.current_file, 'r') as file:
+                invoice_data = yaml.safe_load(file)
             
-            if result.returncode == 0:
-                messagebox.showinfo("Success", f"PDF invoice generated successfully!\n\nFile: {output_pdf}")
-                self.status_bar.config(text=f"PDF generated: {os.path.basename(output_pdf)}")
+            # Generate PDF using the imported function
+            pdf_path = generate_invoice(invoice_data, output_pdf)
+            
+            if pdf_path and os.path.exists(pdf_path):
+                messagebox.showinfo("Success", f"PDF invoice generated successfully!\n\nFile: {pdf_path}")
+                self.status_bar.config(text=f"PDF generated: {os.path.basename(pdf_path)}")
                 
                 # Open the generated PDF
                 if messagebox.askyesno("Open PDF", "Would you like to open the generated PDF?"):
-                    os.startfile(output_pdf) if os.name == 'nt' else subprocess.run(['xdg-open', output_pdf])
+                    os.startfile(pdf_path) if os.name == 'nt' else subprocess.run(['xdg-open', pdf_path])
             else:
-                messagebox.showerror("Error", f"Failed to generate PDF:\n{result.stderr}")
+                messagebox.showerror("Error", "Failed to generate PDF: No output file created")
                 
+        except ImportError as e:
+            messagebox.showerror("Error", f"Failed to import invoice generator: {str(e)}\n\nPlease ensure the application is properly installed.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate PDF: {str(e)}")
             
