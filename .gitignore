@@ -1,7 +1,9 @@
 # InvoiceArtisan .gitignore
 
 # Invoice files - these contain sensitive business data
-invoices/
+output/invoices/
+output/logs/
+output/temp/
 *.pdf
 *.yaml
 *.yml
