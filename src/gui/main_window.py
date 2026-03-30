@@ -11,6 +11,7 @@ import subprocess
 import threading
 from PIL import Image, ImageTk
 import json
+import traceback
 
 # Add the src directory to the Python path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -25,16 +26,22 @@ class InvoiceArtisanGUI:
         self.root.geometry("1200x800")
         self.root.minsize(1000, 700)
         
-        # Set theme colors
+        # Set modern, futuristic theme colors with high contrast
         self.colors = {
-            'primary': '#2c3e50',
-            'secondary': '#3498db',
-            'accent': '#e74c3c',
-            'success': '#27ae60',
-            'warning': '#f39c12',
-            'light': '#ecf0f1',
-            'dark': '#2c3e50',
-            'white': '#ffffff'
+            'primary': '#1a1a2e',      # Dark navy
+            'secondary': '#16213e',    # Darker blue
+            'accent': '#0f3460',       # Deep blue
+            'highlight': '#00d4ff',    # Cyan/neon blue
+            'success': '#00ff88',      # Neon green
+            'warning': '#ffaa00',      # Amber
+            'error': '#ff3366',        # Coral red
+            'background': '#0d1117',   # Very dark
+            'background_light': '#161b22',  # Slightly lighter dark
+            'text': '#ffffff',         # White
+            'text_secondary': '#c9d1d9',  # Light gray
+            'border': '#30363d',       # Border gray
+            'white': '#ffffff',
+            'dark': '#1a1a2e'
         }
         
         # Configure styles
@@ -64,29 +71,137 @@ class InvoiceArtisanGUI:
         self.bind_events()
         
     def setup_styles(self):
-        """Configure ttk styles for modern appearance"""
+        """Configure ttk styles for modern, futuristic appearance with high contrast"""
         style = ttk.Style()
         
-        # Configure common styles
+        # Try to use a modern theme, fallback to default
+        try:
+            style.theme_use('clam')  # Better for custom styling
+        except:
+            pass
+        
+        # Configure root window background
+        self.root.configure(bg=self.colors['background'])
+        
+        # Configure common styles with high contrast
         style.configure('Header.TLabel', 
-                       font=('Helvetica', 16, 'bold'), 
-                       foreground=self.colors['primary'])
+                       font=('Segoe UI', 18, 'bold'), 
+                       foreground=self.colors['highlight'],
+                       background=self.colors['background'])
         
         style.configure('Section.TLabel', 
-                       font=('Helvetica', 12, 'bold'), 
-                       foreground=self.colors['secondary'])
+                       font=('Segoe UI', 11, 'bold'), 
+                       foreground=self.colors['highlight'],
+                       background=self.colors['background'])
         
-        style.configure('Success.TButton',
+        # Modern button styles with high contrast and visibility
+        style.configure('Modern.Primary.TButton',
+                       background=self.colors['highlight'],
+                       foreground=self.colors['primary'],
+                       borderwidth=2,
+                       relief='raised',
+                       padding=(15, 8),
+                       font=('Segoe UI', 10, 'bold'))
+        style.map('Modern.Primary.TButton',
+                 background=[('active', '#00b8e6'), ('pressed', '#0099cc')])
+        
+        style.configure('Modern.Success.TButton',
                        background=self.colors['success'],
-                       foreground='white')
+                       foreground=self.colors['primary'],
+                       borderwidth=2,
+                       relief='raised',
+                       padding=(15, 8),
+                       font=('Segoe UI', 10, 'bold'))
+        style.map('Modern.Success.TButton',
+                 background=[('active', '#00e699'), ('pressed', '#00cc77')])
         
-        style.configure('Primary.TButton',
-                       background=self.colors['secondary'],
-                       foreground='white')
-        
-        style.configure('Warning.TButton',
+        style.configure('Modern.Warning.TButton',
                        background=self.colors['warning'],
-                       foreground='white')
+                       foreground=self.colors['primary'],
+                       borderwidth=2,
+                       relief='raised',
+                       padding=(15, 8),
+                       font=('Segoe UI', 10, 'bold'))
+        style.map('Modern.Warning.TButton',
+                 background=[('active', '#ffbb33'), ('pressed', '#ff9900')])
+        
+        style.configure('Modern.Error.TButton',
+                       background=self.colors['error'],
+                       foreground=self.colors['text'],
+                       borderwidth=2,
+                       relief='raised',
+                       padding=(15, 8),
+                       font=('Segoe UI', 10, 'bold'))
+        style.map('Modern.Error.TButton',
+                 background=[('active', '#ff4d7a'), ('pressed', '#ff1a4d')])
+        
+        # Default button style for better visibility
+        style.configure('TButton',
+                       background=self.colors['accent'],
+                       foreground=self.colors['text'],
+                       borderwidth=2,
+                       relief='raised',
+                       padding=(12, 6),
+                       font=('Segoe UI', 9))
+        style.map('TButton',
+                 background=[('active', self.colors['highlight']), 
+                            ('pressed', self.colors['secondary'])],
+                 foreground=[('active', self.colors['primary'])])
+        
+        # Notebook (tabs) styling
+        style.configure('TNotebook',
+                       background=self.colors['background'],
+                       borderwidth=0)
+        style.configure('TNotebook.Tab',
+                       background=self.colors['background_light'],
+                       foreground=self.colors['text_secondary'],
+                       padding=(20, 10),
+                       font=('Segoe UI', 10))
+        style.map('TNotebook.Tab',
+                 background=[('selected', self.colors['accent']),
+                           ('active', self.colors['secondary'])],
+                 foreground=[('selected', self.colors['highlight']),
+                            ('active', self.colors['text'])])
+        
+        # Frame styling
+        style.configure('TFrame',
+                       background=self.colors['background'])
+        style.configure('TLabelFrame',
+                       background=self.colors['background'],
+                       foreground=self.colors['highlight'],
+                       borderwidth=2,
+                       relief='solid')
+        style.configure('TLabelFrame.Label',
+                       background=self.colors['background'],
+                       foreground=self.colors['highlight'],
+                       font=('Segoe UI', 10, 'bold'))
+        
+        # Entry and Combobox styling
+        style.configure('TEntry',
+                       fieldbackground=self.colors['background_light'],
+                       foreground=self.colors['text'],
+                       borderwidth=2,
+                       relief='solid',
+                       insertcolor=self.colors['highlight'])
+        style.configure('TCombobox',
+                       fieldbackground=self.colors['background_light'],
+                       foreground=self.colors['text'],
+                       borderwidth=2,
+                       relief='solid')
+        
+        # Label styling
+        style.configure('TLabel',
+                       background=self.colors['background'],
+                       foreground=self.colors['text_secondary'],
+                       font=('Segoe UI', 9))
+        
+        # Status bar styling
+        style.configure('Status.TLabel',
+                       background=self.colors['background_light'],
+                       foreground=self.colors['highlight'],
+                       relief='sunken',
+                       borderwidth=1,
+                       font=('Segoe UI', 9))
         
     def create_header(self):
         """Create the application header"""
@@ -102,8 +217,9 @@ class InvoiceArtisanGUI:
         # Subtitle
         subtitle_label = ttk.Label(header_frame, 
                                   text="Professional Invoice Generator", 
-                                  font=('Helvetica', 10),
-                                  foreground=self.colors['secondary'])
+                                  font=('Segoe UI', 10),
+                                  foreground=self.colors['text_secondary'],
+                                  background=self.colors['background'])
         subtitle_label.pack(side=tk.LEFT, padx=(10, 0))
         
                 # File operations frame
@@ -115,7 +231,9 @@ class InvoiceArtisanGUI:
         template_frame.pack(side=tk.RIGHT, padx=(20, 0))
         
         ttk.Label(template_frame, text="Template:", 
-                 font=('Helvetica', 9)).pack(side=tk.LEFT, padx=(0, 5))
+                 font=('Segoe UI', 9),
+                 foreground=self.colors['text_secondary'],
+                 background=self.colors['background']).pack(side=tk.LEFT, padx=(0, 5))
         
         self.template_var = tk.StringVar(value="modern_blue")
         self.template_combo = ttk.Combobox(template_frame, 
@@ -129,22 +247,23 @@ class InvoiceArtisanGUI:
         
         # New button
         self.new_btn = ttk.Button(file_frame, 
-                                  text="New Invoice", 
+                                  text="🆕 New Invoice", 
                                   command=self.new_invoice,
-                                  style='Primary.TButton')
+                                  style='Modern.Primary.TButton')
         self.new_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
         # Open button
         self.open_btn = ttk.Button(file_frame, 
-                                   text="Open YAML", 
-                                   command=self.open_yaml)
+                                   text="📂 Open YAML", 
+                                   command=self.open_yaml,
+                                   style='Modern.Primary.TButton')
         self.open_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
         # Save button
         self.save_btn = ttk.Button(file_frame, 
-                                   text="Save YAML", 
+                                   text="💾 Save YAML", 
                                    command=self.save_yaml,
-                                   style='Success.TButton')
+                                   style='Modern.Success.TButton')
         self.save_btn.pack(side=tk.RIGHT, padx=(5, 0))
         
     def create_main_content(self):
@@ -216,11 +335,11 @@ class InvoiceArtisanGUI:
         actions_frame = ttk.Frame(content_frame)
         actions_frame.grid(row=5, column=0, columnspan=2, pady=20)
         
-        ttk.Button(actions_frame, text="Set Today's Date", 
+        ttk.Button(actions_frame, text="📅 Set Today's Date", 
                   command=self.set_today_date).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(actions_frame, text="Set Due Date (+30 days)", 
+        ttk.Button(actions_frame, text="📆 Set Due Date (+30 days)", 
                   command=self.set_due_date).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(actions_frame, text="Auto-generate Invoice Number", 
+        ttk.Button(actions_frame, text="🔢 Auto-generate Invoice Number", 
                   command=self.auto_generate_number).pack(side=tk.LEFT)
         
     def create_company_tab(self):
@@ -421,13 +540,13 @@ class InvoiceArtisanGUI:
         buttons_frame = ttk.Frame(item_edit_frame)
         buttons_frame.grid(row=2, column=0, columnspan=4, pady=10)
         
-        ttk.Button(buttons_frame, text="Add Item", 
-                  command=self.add_item, style='Success.TButton').pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(buttons_frame, text="Update Item", 
-                  command=self.update_item).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(buttons_frame, text="Delete Item", 
-                  command=self.delete_item, style='Warning.TButton').pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(buttons_frame, text="Clear Form", 
+        ttk.Button(buttons_frame, text="➕ Add Item", 
+                  command=self.add_item, style='Modern.Success.TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(buttons_frame, text="✏️ Update Item", 
+                  command=self.update_item, style='Modern.Primary.TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(buttons_frame, text="🗑️ Delete Item", 
+                  command=self.delete_item, style='Modern.Warning.TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(buttons_frame, text="🗑️ Clear Form", 
                   command=self.clear_item_form).pack(side=tk.LEFT)
         
         # Bind selection event
@@ -539,20 +658,22 @@ class InvoiceArtisanGUI:
         generate_frame = ttk.Frame(content_frame)
         generate_frame.pack(fill=tk.X)
         
-        self.generate_btn = ttk.Button(generate_frame, text="Generate PDF Invoice", 
+        self.generate_btn = ttk.Button(generate_frame, text="📄 Generate PDF Invoice", 
                                       command=self.generate_pdf,
-                                      style='Success.TButton')
+                                      style='Modern.Success.TButton')
         self.generate_btn.pack(side=tk.RIGHT)
         
         # Preview button
-        self.preview_btn = ttk.Button(generate_frame, text="Update Preview", 
-                                     command=self.update_preview)
+        self.preview_btn = ttk.Button(generate_frame, text="👁️ Update Preview", 
+                                     command=self.update_preview,
+                                     style='Modern.Primary.TButton')
         self.preview_btn.pack(side=tk.RIGHT, padx=(0, 10))
         
     def create_status_bar(self):
         """Create the status bar"""
         self.status_bar = ttk.Label(self.main_container, text="Ready", 
-                                   relief=tk.SUNKEN, anchor=tk.W)
+                                   relief=tk.SUNKEN, anchor=tk.W,
+                                   style='Status.TLabel')
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         
     def get_default_invoice_data(self):
@@ -829,10 +950,15 @@ FEATURES:
                 if messagebox.askyesno("Open PDF", "Would you like to open the generated sample PDF?"):
                     os.startfile(pdf_path) if os.name == 'nt' else subprocess.run(['xdg-open', pdf_path])
             else:
-                messagebox.showerror("Error", "Failed to generate sample PDF")
+                self.show_error("Sample PDF Generation Error",
+                              "Failed to generate sample PDF: No output file created",
+                              context=f"Template: {selected_template}\nOutput Path: {output_path}")
                 
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to generate sample PDF: {str(e)}")
+            self.show_error("Sample PDF Generation Error",
+                          f"Failed to generate sample PDF: {str(e)}",
+                          exception=e,
+                          context=f"Template: {selected_template}\nOutput Path: {output_path}")
         
     def on_tab_changed(self, event):
         """Handle tab change events"""
@@ -868,7 +994,10 @@ FEATURES:
                 self.load_data_to_ui()
                 self.status_bar.config(text=f"Opened: {os.path.basename(file_path)}")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to open file: {str(e)}")
+                self.show_error("File Open Error",
+                              f"Failed to open YAML file: {str(e)}",
+                              exception=e,
+                              context=f"File Path: {file_path}")
                 
     def save_yaml(self):
         """Save current data to YAML file"""
@@ -892,14 +1021,17 @@ FEATURES:
                 return
         
         try:
-            with open(self.current_file, 'w') as file:
+            with open(self.current_file, 'w', encoding='utf-8') as file:
                 yaml.dump(self.invoice_data, file, default_flow_style=False, sort_keys=False)
             self.status_bar.config(text=f"Saved: {os.path.basename(self.current_file)}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save file: {str(e)}")
+            self.show_error("File Save Error",
+                          f"Failed to save YAML file: {str(e)}",
+                          exception=e,
+                          context=f"File Path: {self.current_file}")
             
     def generate_pdf(self):
-        """Generate PDF invoice"""
+        """Generate PDF invoice with comprehensive error handling"""
         self.collect_data_from_ui()
         
         if not self.current_file:
@@ -907,9 +1039,19 @@ FEATURES:
             return
         
         # Save current data
-        self.save_yaml()
+        try:
+            self.save_yaml()
+        except Exception as e:
+            self.show_error("Save Error", 
+                          f"Failed to save YAML file before generating PDF: {str(e)}",
+                          exception=e,
+                          context=f"File: {self.current_file}")
+            return
         
         # Generate PDF using the core invoice generator
+        output_pdf = None
+        pdf_path = None
+        
         try:
             # Import the generate_invoice function
             from core.invoice_generator import generate_invoice
@@ -917,16 +1059,34 @@ FEATURES:
             # Generate PDF in the same directory as the YAML file
             output_pdf = self.current_file.rsplit('.', 1)[0] + '.pdf'
             
-            # If the YAML is in the output/invoices folder, ensure PDF goes there too
-            if 'output/invoices' in self.current_file:
-                # Ensure the output directory exists
-                output_dir = os.path.dirname(output_pdf)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
+            # Validate output path
+            output_dir = os.path.dirname(output_pdf)
+            if not os.path.exists(output_dir):
+                try:
+                    os.makedirs(output_dir, exist_ok=True)
+                except Exception as e:
+                    raise Exception(f"Cannot create output directory '{output_dir}': {str(e)}")
+            
+            # Check write permissions
+            if os.path.exists(output_dir) and not os.access(output_dir, os.W_OK):
+                raise Exception(f"No write permission for directory: {output_dir}")
             
             # Load the YAML data first
-            with open(self.current_file, 'r') as file:
-                invoice_data = yaml.safe_load(file)
+            try:
+                with open(self.current_file, 'r', encoding='utf-8') as file:
+                    invoice_data = yaml.safe_load(file)
+                if not invoice_data:
+                    raise Exception("YAML file is empty or invalid")
+            except yaml.YAMLError as e:
+                raise Exception(f"Invalid YAML format in file: {str(e)}")
+            except Exception as e:
+                raise Exception(f"Failed to read YAML file: {str(e)}")
+            
+            # Validate invoice data structure
+            required_fields = ['invoice', 'company', 'client', 'items']
+            for field in required_fields:
+                if field not in invoice_data:
+                    raise Exception(f"Missing required field in YAML: '{field}'")
             
             # Get selected template
             selected_template = self.get_selected_template()
@@ -934,20 +1094,51 @@ FEATURES:
             # Generate PDF using the imported function with selected template
             pdf_path = generate_invoice(invoice_data, output_pdf, selected_template)
             
-            if pdf_path and os.path.exists(pdf_path):
-                messagebox.showinfo("Success", f"PDF invoice generated successfully!\n\nFile: {pdf_path}")
-                self.status_bar.config(text=f"PDF generated: {os.path.basename(pdf_path)}")
-                
-                # Open the generated PDF
-                if messagebox.askyesno("Open PDF", "Would you like to open the generated PDF?"):
-                    os.startfile(pdf_path) if os.name == 'nt' else subprocess.run(['xdg-open', pdf_path])
-            else:
-                messagebox.showerror("Error", "Failed to generate PDF: No output file created")
+            # Validate PDF was created
+            if not pdf_path:
+                raise Exception("PDF generation function returned None. Check console/logs for details.")
+            
+            if not os.path.exists(pdf_path):
+                raise Exception(f"PDF file was not created at expected path: {pdf_path}")
+            
+            # Check file size (should be > 0)
+            file_size = os.path.getsize(pdf_path)
+            if file_size == 0:
+                raise Exception(f"PDF file was created but is empty (0 bytes): {pdf_path}")
+            
+            # Success!
+            messagebox.showinfo("Success", 
+                              f"PDF invoice generated successfully!\n\n"
+                              f"File: {pdf_path}\n"
+                              f"Size: {file_size:,} bytes")
+            self.status_bar.config(text=f"PDF generated: {os.path.basename(pdf_path)}")
+            
+            # Open the generated PDF
+            if messagebox.askyesno("Open PDF", "Would you like to open the generated PDF?"):
+                try:
+                    if os.name == 'nt':
+                        os.startfile(pdf_path)
+                    else:
+                        subprocess.run(['xdg-open', pdf_path], check=False)
+                except Exception as e:
+                    self.show_error("Open PDF Error",
+                                  f"PDF was generated successfully but could not be opened: {str(e)}",
+                                  exception=e,
+                                  context=f"PDF Path: {pdf_path}")
                 
         except ImportError as e:
-            messagebox.showerror("Error", f"Failed to import invoice generator: {str(e)}\n\nPlease ensure the application is properly installed.")
+            self.show_error("Import Error",
+                          f"Failed to import invoice generator module.\n\n"
+                          f"Please ensure the application is properly installed and all dependencies are available.",
+                          exception=e,
+                          context=f"Module: core.invoice_generator")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to generate PDF: {str(e)}")
+            error_context = f"Output Path: {output_pdf}\nYAML File: {self.current_file}\nTemplate: {self.get_selected_template()}"
+            self.show_error("PDF Generation Error",
+                          f"Failed to generate PDF invoice.\n\n"
+                          f"Error: {str(e)}",
+                          exception=e,
+                          context=error_context)
             
     def update_preview(self):
         """Update the preview tab"""
@@ -1027,12 +1218,17 @@ Terms: {self.invoice_data.get('terms', '')}
         try:
             quantity = float(self.item_quantity_var.get())
             rate = float(self.item_rate_var.get())
-        except ValueError:
-            messagebox.showerror("Error", "Please enter valid numbers for quantity and rate.")
+        except ValueError as e:
+            self.show_error("Validation Error",
+                          "Please enter valid numbers for quantity and rate.",
+                          exception=e,
+                          context=f"Quantity: '{self.item_quantity_var.get()}', Rate: '{self.item_rate_var.get()}'")
             return
         
         if not self.item_name_var.get().strip():
-            messagebox.showerror("Error", "Please enter an item name.")
+            self.show_error("Validation Error",
+                          "Please enter an item name.",
+                          context="Item name field is empty")
             return
         
         new_item = {
@@ -1056,8 +1252,11 @@ Terms: {self.invoice_data.get('terms', '')}
         try:
             quantity = float(self.item_quantity_var.get())
             rate = float(self.item_rate_var.get())
-        except ValueError:
-            messagebox.showerror("Error", "Please enter valid numbers for quantity and rate.")
+        except ValueError as e:
+            self.show_error("Validation Error",
+                          "Please enter valid numbers for quantity and rate.",
+                          exception=e,
+                          context=f"Quantity: '{self.item_quantity_var.get()}', Rate: '{self.item_rate_var.get()}'")
             return
         
         # Find and update the item
@@ -1129,6 +1328,119 @@ IBAN Number: PK24ALFH0740001009144194"""
         """Clear notes and terms"""
         self.notes_text.delete(1.0, tk.END)
         self.terms_text.delete(1.0, tk.END)
+    
+    def show_error_details(self, title, error_message, exception=None, context=None):
+        """Show detailed error dialog with stack trace and copy functionality"""
+        # Create error dialog window
+        error_window = tk.Toplevel(self.root)
+        error_window.title(f"Error: {title}")
+        error_window.geometry("700x600")
+        error_window.configure(bg=self.colors['background'])
+        error_window.transient(self.root)
+        error_window.grab_set()
+        
+        # Main container
+        main_frame = ttk.Frame(error_window, padding=20)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        main_frame.configure(style='TFrame')
+        
+        # Error icon and title
+        title_frame = ttk.Frame(main_frame)
+        title_frame.pack(fill=tk.X, pady=(0, 15))
+        
+        title_label = ttk.Label(title_frame, 
+                               text=f"❌ {title}",
+                               font=('Segoe UI', 14, 'bold'),
+                               foreground=self.colors['error'],
+                               background=self.colors['background'])
+        title_label.pack(anchor=tk.W)
+        
+        # Error message
+        msg_label = ttk.Label(main_frame,
+                             text=error_message,
+                             wraplength=650,
+                             justify=tk.LEFT,
+                             font=('Segoe UI', 10),
+                             foreground=self.colors['text'],
+                             background=self.colors['background'])
+        msg_label.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Context information if provided
+        if context:
+            context_label = ttk.Label(main_frame,
+                                     text=f"Context: {context}",
+                                     wraplength=650,
+                                     justify=tk.LEFT,
+                                     font=('Segoe UI', 9),
+                                     foreground=self.colors['text_secondary'],
+                                     background=self.colors['background'])
+            context_label.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Stack trace section
+        trace_frame = ttk.LabelFrame(main_frame, text="Error Details & Stack Trace", padding=10)
+        trace_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        
+        # Scrolled text for stack trace
+        trace_text = scrolledtext.ScrolledText(trace_frame, 
+                                              height=15,
+                                              width=80,
+                                              bg=self.colors['background_light'],
+                                              fg=self.colors['text'],
+                                              insertbackground=self.colors['highlight'],
+                                              font=('Consolas', 9),
+                                              wrap=tk.WORD)
+        trace_text.pack(fill=tk.BOTH, expand=True)
+        
+        # Build trace content
+        trace_content = []
+        if exception:
+            trace_content.append(f"Exception Type: {type(exception).__name__}\n")
+            trace_content.append(f"Exception Message: {str(exception)}\n")
+            trace_content.append("\n" + "="*70 + "\n")
+            trace_content.append("Full Stack Trace:\n")
+            trace_content.append("="*70 + "\n")
+            trace_content.append(traceback.format_exc())
+        else:
+            trace_content.append("No exception details available.\n")
+            trace_content.append("This error occurred without a Python exception.\n")
+        
+        trace_text.insert(1.0, ''.join(trace_content))
+        trace_text.config(state=tk.DISABLED)
+        
+        # Button frame
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill=tk.X)
+        
+        def copy_to_clipboard():
+            """Copy error details to clipboard"""
+            self.root.clipboard_clear()
+            full_text = f"{title}\n\n{error_message}\n\n"
+            if context:
+                full_text += f"Context: {context}\n\n"
+            full_text += trace_text.get(1.0, tk.END)
+            self.root.clipboard_append(full_text)
+            messagebox.showinfo("Copied", "Error details copied to clipboard!")
+        
+        ttk.Button(button_frame, 
+                  text="📋 Copy to Clipboard",
+                  command=copy_to_clipboard,
+                  style='Modern.Primary.TButton').pack(side=tk.LEFT, padx=(0, 10))
+        
+        ttk.Button(button_frame,
+                  text="Close",
+                  command=error_window.destroy,
+                  style='Modern.Primary.TButton').pack(side=tk.RIGHT)
+        
+        # Center the window
+        error_window.update_idletasks()
+        x = (error_window.winfo_screenwidth() // 2) - (error_window.winfo_width() // 2)
+        y = (error_window.winfo_screenheight() // 2) - (error_window.winfo_height() // 2)
+        error_window.geometry(f"+{x}+{y}")
+    
+    def show_error(self, title, error_message, exception=None, context=None):
+        """Show error with option to view details"""
+        # Show details dialog directly
+        self.show_error_details(title, error_message, exception, context)
 
 def main():
     root = tk.Tk()

@@ -64,57 +64,48 @@ def generate_invoice(data, output_pdf, template_id="modern_blue"):
         
         # Validate input data
         if not isinstance(data, dict):
-            print(f"Error: Expected dict, got {type(data)}")
-            return None
+            raise ValueError(f"Expected dict for invoice data, got {type(data)}")
             
         # Check required fields
         required_fields = ['invoice', 'company', 'client', 'items']
         for field in required_fields:
             if field not in data:
-                print(f"Error: Missing required field '{field}'")
-                return None
+                raise ValueError(f"Missing required field '{field}' in invoice data")
         
         # Check that invoice, company, and client are dictionaries
         dict_fields = ['invoice', 'company', 'client']
         for field in dict_fields:
             if not isinstance(data[field], dict):
-                print(f"Error: Field '{field}' should be a dict, got {type(data[field])}")
-                return None
+                raise ValueError(f"Field '{field}' should be a dict, got {type(data[field])}")
         
         # Check invoice subfields
         invoice_fields = ['number', 'date', 'due_date']
         for field in invoice_fields:
             if field not in data['invoice']:
-                print(f"Error: Missing invoice field '{field}'")
-                return None
+                raise ValueError(f"Missing invoice field '{field}'")
         
         # Check company subfields
         company_fields = ['name', 'city', 'state', 'zip', 'country', 'email', 'phone']
         for field in company_fields:
             if field not in data['company']:
-                print(f"Error: Missing company field '{field}'")
-                return None
+                raise ValueError(f"Missing company field '{field}'")
         
         # Check client subfields
         client_fields = ['name', 'address', 'city', 'state', 'zip', 'country']
         for field in client_fields:
             if field not in data['client']:
-                print(f"Error: Missing client field '{field}'")
-                return None
+                raise ValueError(f"Missing client field '{field}'")
         
         # Check items
         if not isinstance(data['items'], list) or len(data['items']) == 0:
-            print("Error: Items should be a non-empty list")
-            return None
+            raise ValueError("Items should be a non-empty list")
             
         # Check that each item in the list is a dictionary with required fields
         for i, item in enumerate(data['items']):
             if not isinstance(item, dict):
-                print(f"Error: Item {i+1} should be a dict, got {type(item)}")
-                return None
+                raise ValueError(f"Item {i+1} should be a dict, got {type(item)}")
             if 'quantity' not in item or 'rate' not in item:
-                print(f"Error: Item {i+1} missing required fields 'quantity' or 'rate'")
-                return None
+                raise ValueError(f"Item {i+1} missing required fields 'quantity' or 'rate'")
         
         print(f"Data validation passed. Invoice: {data['invoice']['number']}")
         
@@ -171,18 +162,40 @@ def generate_invoice(data, output_pdf, template_id="modern_blue"):
         
         # Create a table for the header with logo and invoice title
         # Try to find the logo in different possible locations
-        logo_paths = [
-            'assets/logos/MaazLogo.PNG',  # New structure
-            'logo/MaazLogo.PNG',          # Old structure
-            'MaazLogo.PNG'                # Root directory
-        ]
+        import os
+        base_paths = []
+        
+        # Handle both development and PyInstaller executable paths
+        if getattr(sys, 'frozen', False):
+            # Running as PyInstaller executable
+            base_path = sys._MEIPASS
+            base_paths = [
+                os.path.join(base_path, 'assets', 'logos', 'MaazLogo.PNG'),
+                os.path.join(base_path, 'logo', 'MaazLogo.PNG'),
+                os.path.join(base_path, 'MaazLogo.PNG'),
+            ]
+        else:
+            # Running in development
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(os.path.dirname(script_dir))
+            base_paths = [
+                os.path.join(project_root, 'assets', 'logos', 'MaazLogo.PNG'),
+                os.path.join(project_root, 'logo', 'MaazLogo.PNG'),
+                os.path.join(project_root, 'MaazLogo.PNG'),
+                'assets/logos/MaazLogo.PNG',  # Relative paths
+                'logo/MaazLogo.PNG',
+                'MaazLogo.PNG'
+            ]
         
         logo = None
-        for logo_path in logo_paths:
+        for logo_path in base_paths:
             try:
-                logo = Image(logo_path, width=2*inch, height=1.4*inch)
-                break
-            except:
+                if os.path.exists(logo_path):
+                    logo = Image(logo_path, width=2*inch, height=1.4*inch)
+                    break
+            except Exception as e:
+                # Log but continue trying other paths
+                print(f"Could not load logo from {logo_path}: {e}")
                 continue
         
         # If no logo found, create a placeholder
@@ -557,10 +570,10 @@ def generate_invoice(data, output_pdf, template_id="modern_blue"):
         return output_pdf
         
     except Exception as e:
-        print(f"Error generating invoice: {str(e)}")
+        # Re-raise with more context instead of returning None
         import traceback
-        traceback.print_exc()
-        return None
+        error_msg = f"PDF generation failed: {str(e)}\n\nFull traceback:\n{traceback.format_exc()}"
+        raise RuntimeError(error_msg) from e
 
 def main():
     if len(sys.argv) != 2:
